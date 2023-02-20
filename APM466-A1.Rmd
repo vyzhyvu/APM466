@@ -1,0 +1,319 @@
+---
+title: "A1"
+author: "Kateryna Mudra"
+date: "2023-02-20"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+library("jrvFinance")
+```
+
+```{r}
+bonds <-read.csv("bonds_selected.csv")
+bonds
+```
+
+```{r}
+
+date_list <- as.Date(c('01/16/2023', '01/17/2023', '01/18/2023', '01/19/2023','01/20/2023', '01/23/2023', '01/24/2023', '01/25/2023', '01/26/2023', '01/27/2023'), format = "%m/%d/%Y")
+date_list
+```
+
+```{r}
+bonds$Issue.date <- as.Date(bonds$Issue.date, format = "%m/%d/%Y")
+maturity <- as.Date(bonds$Maturity.date, format = "%m/%d/%Y")
+
+freq = 2
+coup_r = bonds$Coupon/100
+face_value = 100
+
+present_prices <- bonds[colnames(bonds)[7:16]]
+
+prices <-bonds[1:10,c(7:16)]
+
+for (j in c(1:10)){ 
+  for (i in c(1:10)){ 
+    prices[j,i] <-(bond.yield(settle = date_list[i], mature = maturity[j], coupon = coup_r[j], freq = freq, price =  prices[j,i], redemption_value = face_value))
+  }
+}
+
+dataframe<-bonds
+dataframe[1:10,c(7:16)] <- prices
+dataframe[c(1, 7:16, 5)]
+
+```
+
+```{r}
+
+plot(dataframe$MaturityDate, dataframe$X1.16.2023, type = "l", main = "YTM plot", xlab= "Time to Maturity", ylab = "Yield-to-Maturity")
+lines(dataframe$MaturityDate, dataframe$X1.17.2023, type = "l", col = 2)
+lines(dataframe$MaturityDate, dataframe$X1.18.2023, type = "l", col = 3)
+lines(dataframe$MaturityDate, dataframe$X1.19.2023, type = "l", col = 4)
+lines(dataframe$MaturityDate, dataframe$X1.20.2023, type = "l", col = 5)
+lines(dataframe$MaturityDate, dataframe$X1.23.2023, type = "l", col = 6)
+lines(dataframe$MaturityDate, dataframe$X1.24.2023, type = "l", col = 7)
+lines(dataframe$MaturityDate, dataframe$X1.25.2023, type = "l", col = 8)
+lines(dataframe$MaturityDate, dataframe$X1.26.2023, type = "l", col = 9)
+lines(dataframe$MaturityDate, dataframe$X1.27.2023, type = "l", col = 10)
+
+
+dataframe$Maturity.date
+```
+
+Spot Rate
+
+```{r}
+
+prices2 <- dataframe
+bonds['Periods'] <- c(0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5)
+
+bond_pr1 <- bonds[1, 7:16]
+dirt_pr1 <- c()
+
+for (i in 1:10){
+  dirt_pr1[i] <- bond_pr1[i] + bond.TCF(date_list[i], maturity[1], coup_r[1], freq)$accrued
+}
+
+spot1 <- c()
+for (i in 1:10){
+  spot1[i] <- -1*log(as.numeric(dirt_pr1[i])/(100 + coup_r[1]/2))/ bonds$Periods[1]
+}
+
+bond_pr2 <- bonds[2, 7:16] 
+dirt_pr2 <- c() 
+for (i in 1:10){
+  dirt_pr2[i] <- bond_pr2[i] + bond.TCF(date_list[i], maturity[2], coup_r[2], freq)$accrued
+}
+
+spot2 <- c()
+pv2 <- 0
+for (i in 1:10){
+  pv2 <- pv2 + (coup_r[2] / 2) * exp(-1*spot1[i] * 1)
+  spot2[i]<- -1*log((as.numeric(dirt_pr2[i]) - pv2) / (100 + coup_r[2] / 2)) / bonds$Periods[2] 
+}
+
+bond_pr3 <- bonds[3, 7:16] 
+dirt_pr3 <- c() 
+for (i in 1:10){
+  dirt_pr3[i] <- bond_pr3[i] + bond.TCF(date_list[i], maturity[3], coup_r[3], freq)$accrued
+}
+
+spot3 <- c()
+pv3 <- 0
+for (i in 1:10){
+  pv3 <- pv3 + (coup_r[3] / 2) * exp(-1*spot2[i] * 1.5)
+  spot3[i]<- -1*log((as.numeric(dirt_pr3[i]) - pv3) / (100 + coup_r[3] / 2)) / bonds$Periods[3]
+}
+
+bond_pr4 <- bonds[4, 7:16] 
+dirt_pr4 <- c() 
+for (i in 1:10){
+  dirt_pr4[i] <- bond_pr4[i] + bond.TCF(date_list[i], maturity[4], coup_r[4], freq)$accrued
+}
+
+spot4 <- c()
+pv4 <- 0
+for (i in 1:10){
+  pv4 <- pv4 + (coup_r[4] / 2) * exp(-1*spot3[i] * 2)
+  spot4[i]<- -1*log((as.numeric(dirt_pr4[i]) - pv4) / (100 + coup_r[4] / 2)) / bonds$Periods[4]
+}
+
+bond_pr5 <- bonds[5, 7:16] 
+dirt_pr5 <- c() 
+for (i in 1:10){
+  dirt_pr5[i] <- bond_pr5[i] + bond.TCF(date_list[i], maturity[5], coup_r[5], freq)$accrued
+}
+
+spot5 <- c()
+pv5 <- 0
+for (i in 1:10){
+  pv5 <- pv5 + (coup_r[5] / 2) * exp(-1*spot4[i] * 2.5)
+  spot5[i]<- -1*log((as.numeric(dirt_pr5[i]) - pv5) / (100 + coup_r[5] / 2)) / bonds$Periods[5]
+}
+
+bond_pr6 <- bonds[6, 7:16] 
+dirt_pr6 <- c() 
+for (i in 1:10){
+  dirt_pr6[i] <- bond_pr6[i] + bond.TCF(date_list[i], maturity[6], coup_r[6], freq)$accrued
+}
+
+spot6 <- c()
+pv6 <- 0
+for (i in 1:10){
+  pv6 <- pv6 + (coup_r[6] / 2) * exp(-1*spot5[i] * 3)
+  spot6[i]<- -1*log((as.numeric(dirt_pr6[i]) - pv6) / (100 + coup_r[6] / 2)) / bonds$Periods[6]
+}
+
+bond_pr7 <- bonds[7, 7:16] 
+dirt_pr7 <- c() 
+for (i in 1:10){
+  dirt_pr7[i] <- bond_pr7[i] + bond.TCF(date_list[i], maturity[7], coup_r[7], freq)$accrued
+}
+
+spot7 <- c()
+pv7 <- 0
+for (i in 1:10){
+  pv7 <- pv7 + (coup_r[7] / 2) * exp(-1*spot6[i] * 3.5)
+  spot7[i]<- -1*log((as.numeric(dirt_pr7[i]) - pv7) / (100 + coup_r[7] / 2)) / bonds$Periods[7]
+}
+
+bond_pr8 <- bonds[8, 7:16] 
+dirt_pr8 <- c() 
+for (i in 1:10){
+  dirt_pr8[i] <- bond_pr8[i] + bond.TCF(date_list[i], maturity[8], coup_r[8], freq)$accrued
+}
+
+spot8 <- c()
+pv8 <- 0
+for (i in 1:10){
+  pv8 <- pv8 + (coup_r[8] / 2) * exp(-1*spot7[i] * 4)
+  spot8[i]<- -1*log((as.numeric(dirt_pr8[i]) - pv8) / (100 + coup_r[8] / 2)) / bonds$Periods[8]
+}
+
+bond_pr9 <- bonds[9, 7:16] 
+dirt_pr9 <- c() 
+for (i in 1:10){
+  dirt_pr9[i] <- bond_pr9[i] + bond.TCF(date_list[i], maturity[9], coup_r[9], freq)$accrued
+}
+
+spot9 <- c()
+pv9 <- 0
+for (i in 1:10){
+  pv9 <- pv9 + (coup_r[9] / 2) * exp(-1*spot8[i] * 4.5)
+  spot9[i]<- -1*log((as.numeric(dirt_pr9[i]) - pv9) / (100 + coup_r[9] / 2)) / bonds$Periods[9]
+}
+
+bond_pr10 <- bonds[10, 7:16] 
+dirt_pr10 <- c() 
+for (i in 1:10){
+  dirt_pr10[i] <- bond_pr10[i] + bond.TCF(date_list[i], maturity[10], coup_r[10], freq)$accrued
+}
+
+spot10 <- c()
+pv10 <- 0
+for (i in 1:10){
+  pv10 <- pv10 + (coup_r[10] / 2) * exp(-1*spot9[i] * 5)
+  spot10[i]<- -1*log((as.numeric(dirt_pr10[i]) - pv10) / (100 + coup_r[10] / 2)) / bonds$Periods[10]
+}
+
+prices2[1, 7:16] <- spot1
+prices2[2, 7:16] <- spot2
+prices2[3, 7:16] <- spot3
+prices2[4, 7:16] <- spot4
+prices2[5, 7:16] <- spot5
+prices2[6, 7:16] <- spot6
+prices2[7, 7:16] <- spot7
+prices2[8, 7:16] <- spot8
+prices2[9, 7:16] <- spot9
+prices2[10, 7:16] <- spot10
+
+dataframe2 <- prices2
+dataframe2[c(1, 7:17)]
+```
+
+```{r}
+
+spot_rate1 <- c(spot1[1], spot2[1], spot3[1], spot4[1], spot5[1], spot6[1], spot7[1], spot8[1],
+            spot9[1], spot10[1])
+spot_rate2 <- c(spot1[2], spot2[2], spot3[2], spot4[2], spot5[2], spot6[2], spot7[2], spot8[2],
+            spot9[2], spot10[2])
+spot_rate3 <- c(spot1[3], spot2[3], spot3[3], spot4[3], spot5[3], spot6[3], spot7[3], spot8[3],
+            spot9[3], spot10[3])
+spot_rate4 <- c(spot1[4], spot2[4], spot3[4], spot4[4], spot5[4], spot6[4], spot7[4], spot8[4],
+            spot9[4], spot10[4])
+spot_rate5 <- c(spot1[5], spot2[5], spot3[5], spot4[5], spot5[5], spot6[5], spot7[5], spot8[5],
+            spot9[5], spot10[5])
+spot_rate6 <- c(spot1[6], spot2[6], spot3[6], spot4[6], spot5[6], spot6[6], spot7[6], spot8[6],
+            spot9[6], spot10[6])
+spot_rate7 <- c(spot1[7], spot2[7], spot3[7], spot4[7], spot5[7], spot6[7], spot7[7], spot8[7],
+            spot9[7], spot10[7])
+spot_rate8 <- c(spot1[8], spot2[8], spot3[8], spot4[8], spot5[8], spot6[8], spot7[8], spot8[8],
+            spot9[8], spot10[8])
+spot_rate9 <- c(spot1[9], spot2[9], spot3[9], spot4[9], spot5[9], spot6[9], spot7[9], spot8[9],
+            spot9[9], spot10[9])
+spot_rate10 <- c(spot1[10], spot2[10], spot3[10], spot4[10], spot5[10], spot6[10], spot7[10], spot8[10],
+            spot9[10], spot10[10])
+
+
+spot_data <- data.frame(x = dataframe2$MaturityDate, spot_rate1, spot_rate2, spot_rate3, spot_rate4,
+                        spot_rate5, spot_rate6, spot_rate7, spot_rate8, spot_rate9, spot_rate10)
+
+spot_plot <- ggplot(spot_data, aes(x)) +  
+  geom_line(aes(y = spot_rate1), color = 1) +
+  geom_line(aes(y = spot_rate2), color = 2) +
+  geom_line(aes(y = spot_rate3), color = 3) +
+  geom_line(aes(y = spot_rate4), color = 4) +
+  geom_line(aes(y = spot_rate5), color = 5) +
+  geom_line(aes(y = spot_rate6), color = 6) +
+  geom_line(aes(y = spot_rate7), color = 7) +
+  geom_line(aes(y = spot_rate8), color = 8) +
+  geom_line(aes(y = spot_rate9), color = 9) +
+  geom_line(aes(y = spot_rate10), color = 10) +
+  xlab("Time to Maturity") +
+  ylab("Spot Rate") + 
+  labs(title="Spot Curve")
+
+
+spot_plot
+spot_data
+```
+
+Forward Rate
+
+```{r}
+
+for_rate <- spot_data
+for (i in c(1:4)) {
+  for (j in c(1:10)) {
+    year = (1+spot_data[2*i,j]^(2*i))
+    yfr = (1+spot_data[2+2*i,j]/2)^(2+2*i)
+    fr[i,j] = 2*((yfr/year)^(1/2)-1)
+  }
+}
+colnames(for_rate) = date_list
+rownames(fr) = c("1yr-1yr","1yr-2yr","1yr-3yr","1yr-4yr")
+
+
+```
+
+Matrices - Matrix with YTM
+
+```{r}
+
+ytm2 <- c(dataframe$X1.16.2023[2], dataframe$X1.17.2023[2], dataframe$X1.18.2023[2], dataframe$X1.19.2023[2], dataframe$X1.20.2023[2], dataframe$X1.23.2023[2], dataframe$X1.24.2023[2], dataframe$X1.25.2023[2], dataframe$X1.26.2023[2], dataframe$X1.27.2023[2])
+ytm4 <- c(dataframe$X1.16.2023[4], dataframe$X1.17.2023[4], dataframe$X1.18.2023[4], dataframe$X1.19.2023[4], dataframe$X1.20.2023[4], dataframe$X1.23.2023[4], dataframe$X1.24.2023[4], dataframe$X1.25.2023[4], dataframe$X1.26.2023[4], dataframe$X1.27.2023[4])
+ytm6 <- c(dataframe$X1.16.2023[6], dataframe$X1.17.2023[6], dataframe$X1.18.2023[6], dataframe$X1.19.2023[6], dataframe$X1.20.2023[6], dataframe$X1.23.2023[6], dataframe$X1.24.2023[6], dataframe$X1.25.2023[6], dataframe$X1.26.2023[6], dataframe$X1.27.2023[6])
+ytm8 <- c(dataframe$X1.16.2023[8], dataframe$X1.17.2023[8], dataframe$X1.18.2023[8], dataframe$X1.19.2023[8], dataframe$X1.20.2023[8], dataframe$X1.23.2023[8], dataframe$X1.24.2023[8], dataframe$X1.25.2023[8], dataframe$X1.26.2023[8], dataframe$X1.27.2023[8])
+ytm10 <- c(dataframe$X1.16.2023[10], dataframe$X1.17.2023[10], dataframe$X1.18.2023[10], dataframe$X1.19.2023[10], dataframe$X1.20.2023[10], dataframe$X1.23.2023[10], dataframe$X1.24.2023[10], dataframe$X1.25.2023[10], dataframe$X1.26.2023[10], dataframe$X1.27.2023[10])
+
+m1 <- 0
+for (i in 1:10){
+  m1[i] <- log(ytm2[i+1]/ytm2[i])
+}
+m2 <- 0
+for (i in 1:10){
+  m2[i] <- log(ytm4[i+1]/ytm4[i])
+}
+m3 <- 0
+for (i in 1:10){
+  m3[i] <- log(ytm6[i+1]/ytm6[i])
+}
+m4 <- 0
+for (i in 1:10){
+  m4[i] <- log(ytm8[i+1]/ytm8[i])
+}
+m5 <- 0
+for (i in 1:10){
+  m5[i] <- log(ytm10[i+1]/ytm10[i])
+}
+
+M <- matrix(c(m1,m2,m3,m4,m5),nrow=9,ncol=5)
+M
+
+```
+
